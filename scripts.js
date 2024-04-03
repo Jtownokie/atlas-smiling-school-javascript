@@ -148,7 +148,7 @@ function populatePopularTutorials() {
       videoCardObject.author_pic_url, videoCardObject.author, videoCardObject.star, videoCardObject.duration));
 
     // Create Carousel with Slick
-    $(".responsive-slick").slick({
+    $(".responsive-slick.popular-videos-carousel").slick({
       slidesToShow: 4,
       slidesToScroll: 1,
       infinite: true,
@@ -181,7 +181,123 @@ function populatePopularTutorials() {
 /* Task 3 - Dynamic Latest Video Loading */
 
 function populateLatestVideos() {
-  // Placeholder
+  // Hide loading spinner until Ajax call
+  $(".loader-latest").hide();
+  $(document).on("ajaxStart", function() {
+    $(".loader-latest").show();
+  });
+  $(document).on("ajaxStop", function() {
+    $(".loader-latest").hide();
+  });
+
+  // Function to build Carousel Cards for Popular Videos
+  function buildLatestVideoCard(title, subTitle, thumbURL, authorPicURL, author, stars, duration) {
+    const newVideoCard = $(
+      `<div class="d-flex justify-content-center">
+        <div class="card">
+          <img
+            src="${thumbURL}"
+            class="card-img-top"
+            alt="Video thumbnail"
+          />
+          <div class="card-img-overlay text-center">
+            <img
+              src="images/play.png"
+              alt="Play"
+              width="64px"
+              class="align-self-center play-overlay mx-auto"
+            />
+          </div>
+          <div class="card-body">
+            <h5 class="card-title font-weight-bold">
+              ${title}
+            </h5>
+            <p class="card-text text-muted">
+              ${subTitle}
+            </p>
+            <div class="creator d-flex align-items-center">
+              <img
+                src="${authorPicURL}"
+                alt="Creator of
+                Video"
+                width="30px"
+                class="rounded-circle"
+              />
+              <h6 class="pl-3 m-0 main-color">${author}</h6>
+            </div>
+            <div class="info pt-3 d-flex justify-content-between">
+              <div class="rating d-flex align-items-center">
+              </div>
+              <span class="main-color">${duration}</span>
+            </div>
+          </div>
+        </div>
+      </div>`);
+
+    // Add number of 'on' stars equal to star property
+    for (let i = 0; i < stars; i++) {
+      let newStar = $(
+        `<img
+          src="images/star_on.png"
+          alt="star on"
+          width="15px"
+        />`);
+      newVideoCard.find(".rating").append(newStar);
+    }
+
+    // Add number of 'off' stars equal to 5 minus star property
+    const numOffStars = 5 - stars;
+    for (let i = 0; i < numOffStars; i++) {
+      let newOffStar = $(
+        `<img
+          src="images/star_off.png"
+          alt="star off"
+          width="15px"
+        />`);
+      newVideoCard.find(".rating").append(newOffStar);
+    }
+
+    $(".latest-videos-carousel").append(newVideoCard);
+  }
+
+  // Call Ajax for Video Card Data
+  $.ajax({
+    url: "https://smileschool-api.hbtn.info/latest-videos",
+    method: "GET",
+    dataType: "json"
+  }).done(function(data) {
+    data.forEach((videoCardObject) => buildLatestVideoCard(videoCardObject.title, videoCardObject["sub-title"], videoCardObject.thumb_url,
+      videoCardObject.author_pic_url, videoCardObject.author, videoCardObject.star, videoCardObject.duration));
+
+    // Create Carousel with Slick
+    $(".responsive-slick.latest-videos-carousel").slick({
+      slidesToShow: 4,
+      slidesToScroll: 1,
+      infinite: true,
+      prevArrow: ".arrow-left-latest",
+      nextArrow: ".arrow-right-latest",
+      responsive: [
+        {
+          breakpoint: 991,
+          settings: {
+            slidesToShow: 2,
+            slidesToScroll: 1,
+            infinite: true
+          }
+        },
+        {
+          breakpoint: 575,
+          settings: {
+            slidesToShow: 1,
+            slidesToScroll: 1,
+            infinite: true
+          }
+        }
+      ]
+    });
+  }).fail(function() {
+    console.log("Ajax Call Failed")
+  });
 }
 
 /* Task 5 - Dynamic Courses Loading */
