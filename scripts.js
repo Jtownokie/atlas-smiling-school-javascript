@@ -59,7 +59,31 @@ function populateQuotes() {
 /* Task 2 - Dynamic Tutorial Loading */
 
 function populatePopularTutorials() {
-  // Placeholder
+  $(".responsive-slick").slick({
+    slidesToShow: 4,
+    slidesToScroll: 1,
+    infinite: true,
+    prevArrow: ".arrow-left",
+    nextArrow: ".arrow-right",
+    responsive: [
+      {
+        breakpoint: 991,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 1,
+          infinite: true
+        }
+      },
+      {
+        breakpoint: 575,
+        settings: {
+          slidesToShow: 1,
+          slidesToScroll: 1,
+          infinite: true
+        }
+      }
+    ]
+  });
 }
 
 /* Task 3 - Dynamic Latest Video Loading */
