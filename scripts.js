@@ -151,7 +151,7 @@ function populatePopularTutorials() {
     $(".responsive-slick.popular-videos-carousel").slick({
       slidesToShow: 4,
       slidesToScroll: 1,
-      infinite: true,
+      infinite: false,
       prevArrow: ".arrow-left-popular",
       nextArrow: ".arrow-right-popular",
       responsive: [
@@ -273,7 +273,7 @@ function populateLatestVideos() {
     $(".responsive-slick.latest-videos-carousel").slick({
       slidesToShow: 4,
       slidesToScroll: 1,
-      infinite: true,
+      infinite: false,
       prevArrow: ".arrow-left-latest",
       nextArrow: ".arrow-right-latest",
       responsive: [
@@ -302,8 +302,153 @@ function populateLatestVideos() {
 
 /* Task 5 - Dynamic Courses Loading */
 
-function populateCourses() {
-  // Placeholder
+function populateCoursesFilters() {
+  // Call Ajax to Populate Filter Dropdowns
+  $.ajax({
+    url: "https://smileschool-api.hbtn.info/courses",
+    method: "GET",
+    dataType: "json"
+  }).done(function(data) {
+    const topicsData = data.topics;
+    const sortData = data.sorts;
+
+    topicsData.forEach((topic) => {
+      const newFilterOption = $(`<a class="dropdown-item" href="#">${topic}</a>`);
+
+      newFilterOption.on("click", function() {
+        $(".box2-default-text").text(`${topic}`);
+
+        populateCoursesResults();
+      });
+
+      $(".box2 .dropdown-menu").append(newFilterOption);
+    });
+
+    sortData.forEach((sort) => {
+      const newFilterOption = $(`<a class="dropdown-item" href="#">${sort.replace("_", " ")}</a>`);
+
+      newFilterOption.on("click", function() {
+        $(".box3-default-text").text(`${sort.replace("_", " ")}`);
+
+        populateCoursesResults();
+      });
+
+      $(".box3 .dropdown-menu").append(newFilterOption);
+    });
+  }).fail(function(error) {
+    console.log("Error retrieving JSON")
+  });
+}
+
+function populateCoursesResults() {
+  // Hide Loading Spinner until Ajax call
+  $(".loader-courses").hide();
+  $(document).on("ajaxStart", function() {
+    $(".loader-courses").show();
+  });
+  $(document).on("ajaxStop", function() {
+    $(".loader-courses").hide();
+  });
+
+  function buildCourseVideoCard(title, subTitle, thumbURL, author, authorPicURL, stars, duration) {
+    const newVideoCard = $(`
+      <div class="col-12 col-sm-4 col-lg-3 d-flex justify-content-center">
+        <div class="card">
+          <img
+            src="${thumbURL}"
+            class="card-img-top"
+            alt="Video thumbnail"
+          />
+          <div class="card-img-overlay text-center">
+            <img
+              src="images/play.png"
+              alt="Play"
+              width="64px"
+              class="align-self-center play-overlay"
+            />
+          </div>
+          <div class="card-body">
+            <h5 class="card-title font-weight-bold">${title}</h5>
+            <p class="card-text text-muted">
+              ${subTitle}
+            </p>
+            <div class="creator d-flex align-items-center">
+              <img
+                src="${authorPicURL}"
+                alt="Creator of
+                Video"
+                width="30px"
+                class="rounded-circle"
+              />
+              <h6 class="pl-3 m-0 main-color">${author}</h6>
+            </div>
+            <div class="info pt-3 d-flex justify-content-between">
+              <div class="rating">
+              </div>
+              <span class="main-color">${duration}</span>
+            </div>
+          </div>
+        </div>
+      </div>`)
+
+    // Add number of 'on' stars equal to star property
+    for (let i = 0; i < stars; i++) {
+      let newStar = $(
+        `<img
+          src="images/star_on.png"
+          alt="star on"
+          width="15px"
+        />`);
+      newVideoCard.find(".rating").append(newStar);
+    }
+
+    // Add number of 'off' stars equal to 5 minus star property
+    const numOffStars = 5 - stars;
+    for (let i = 0; i < numOffStars; i++) {
+      let newOffStar = $(
+        `<img
+          src="images/star_off.png"
+          alt="star off"
+          width="15px"
+        />`);
+      newVideoCard.find(".rating").append(newOffStar);
+    }
+
+    $(".results .row").append(newVideoCard);
+  }
+
+  // Call Ajax for Video Card Data
+  $.ajax({
+    url: "https://smileschool-api.hbtn.info/courses",
+    method: "GET",
+    dataType: "json",
+    data: {
+      q: `${$(".box1 .search-text-area").val()}`,
+      topic: `${$(".box2-default-text").text()}`,
+      sort: `${$(".box3-default-text").text().replace(" ", "_")}`
+    }
+  }).done(function(data) {
+    const courseData = data.courses;
+    console.log(courseData);
+    const numCourses = data.courses.length;
+
+    $(".video-count").text(`${numCourses} videos`);
+
+    $(".results .row").empty();
+
+    courseData.forEach((course) => buildCourseVideoCard(course.title, course['sub-title'], course.thumb_url,
+      course.author, course.author_pic_url, course.star, course.duration));
+  }).fail(function(error) {
+    console.log("Error Retrieving JSON");
+  });
+}
+
+function addEnterPressListen() {
+  $(".search .search-text-area").on("keypress", function(e) {
+    if (e.which === 13) {
+      populateCoursesResults();
+    }
+  });
 }
 
 /* Call Dynamic Functions on Document Ready */
@@ -318,6 +463,8 @@ $( document ).ready(function() {
   } else if (currentFile.includes("pricing")) {
     populateQuotes();
   } else if (currentFile.includes("courses")) {
-    populateCourses();
+    populateCoursesFilters();
+    populateCoursesResults();
+    addEnterPressListen();
   }
 });
