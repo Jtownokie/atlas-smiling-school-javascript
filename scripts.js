@@ -429,7 +429,6 @@ function populateCoursesResults() {
     }
   }).done(function(data) {
     const courseData = data.courses;
-    console.log(courseData);
     const numCourses = data.courses.length;
 
     $(".video-count").text(`${numCourses} videos`);
